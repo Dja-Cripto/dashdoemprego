@@ -2340,7 +2340,6 @@ class Game {
             method: 'POST',
             headers: {
               'apikey': supabaseConfig.anonKey,
-              'Authorization': `Bearer ${supabaseConfig.anonKey}`,
               'Content-Type': 'application/json',
               'Prefer': 'return=representation'
             },
@@ -3157,8 +3156,7 @@ class Game {
       fetch(url, {
         method: 'GET',
         headers: {
-          'apikey': supabaseConfig.anonKey,
-          'Authorization': `Bearer ${supabaseConfig.anonKey}`
+          'apikey': supabaseConfig.anonKey
         }
       })
       .then(res => {
