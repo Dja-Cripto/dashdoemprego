@@ -2351,7 +2351,13 @@ class Game {
             })
           })
           .then(res => {
-            if (!res.ok) throw new Error("Supabase status " + res.status);
+            if (!res.ok) {
+              return res.json().then(errData => {
+                throw new Error(errData.message || `HTTP ${res.status}`);
+              }).catch(() => {
+                throw new Error(`HTTP ${res.status}`);
+              });
+            }
             return res.json();
           })
           .then(() => {
@@ -2363,7 +2369,7 @@ class Game {
           })
           .catch(err => {
             console.error('Erro ao salvar no Supabase:', err);
-            alert('Erro de conexão ao salvar pontuação no banco global do Supabase.');
+            alert('Erro ao salvar no Supabase: ' + err.message);
           });
           return;
         }
@@ -3156,7 +3162,13 @@ class Game {
         }
       })
       .then(res => {
-        if (!res.ok) throw new Error("Supabase status " + res.status);
+        if (!res.ok) {
+          return res.json().then(errData => {
+            throw new Error(errData.message || `HTTP ${res.status}`);
+          }).catch(() => {
+            throw new Error(`HTTP ${res.status}`);
+          });
+        }
         return res.json();
       })
       .then(data => {
