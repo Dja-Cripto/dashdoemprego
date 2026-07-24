@@ -11,6 +11,9 @@ if (SavedDesignConfig) {
     const temp = JSON.parse(SavedDesignConfig);
     if (temp.player && temp.player.sprites && temp.player.sprites.jogador_idle) {
       parsedConfig = temp;
+      if (parsedConfig.supabase === undefined) {
+        parsedConfig.supabase = { url: "", anonKey: "" };
+      }
     } else {
       localStorage.removeItem('dino_design_config');
     }
@@ -20,6 +23,10 @@ if (SavedDesignConfig) {
 }
 const DesignConfig = parsedConfig || {
   "DESIGN_MODE": false,
+  "supabase": {
+    "url": "",
+    "anonKey": ""
+  },
   "DEBUG": {
     "showHitboxes": false,
     "showPivot": false,

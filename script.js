@@ -1673,7 +1673,7 @@ class Renderer {
     const isMobile = bounds.width < 800;
     
     // Garante que o placar fique na área visível do celular se estiver recortado
-    let targetRight = Math.min(this.canvas.width, bounds.right);
+    let targetRight = Math.min(this.canvas.width, bounds.endX || this.canvas.width);
     if (isMobile) {
       targetRight = Math.min(targetRight, 480);
     }
@@ -2326,6 +2326,43 @@ class Game {
           return;
         }
         
+        const supabaseConfig = DesignConfig.supabase;
+        const useSupabase = supabaseConfig && supabaseConfig.url && supabaseConfig.anonKey;
+
+        if (useSupabase) {
+          const url = `${supabaseConfig.url}/rest/v1/scores`;
+          fetch(url, {
+            method: 'POST',
+            headers: {
+              'apikey': supabaseConfig.anonKey,
+              'Authorization': `Bearer ${supabaseConfig.anonKey}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({ 
+              name: name.substring(0, 15).toUpperCase(), 
+              score: this.score.currentScore,
+              avancode: avancodeVal ? avancodeVal.substring(0, 20).toUpperCase() : null
+            })
+          })
+          .then(res => {
+            if (!res.ok) throw new Error("Supabase status " + res.status);
+            return res.json();
+          })
+          .then(() => {
+            this.fetchScores();
+            scoreModal.classList.remove('active');
+            scoreInputName.value = '';
+            if (scoreInputAvancode) scoreInputAvancode.value = '';
+            this.state = State.SCORE_BOARD;
+          })
+          .catch(err => {
+            console.error('Erro ao salvar no Supabase:', err);
+            alert('Erro de conexão ao salvar pontuação no banco global do Supabase.');
+          });
+          return;
+        }
+
         fetch('/scores', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -3096,6 +3133,38 @@ class Game {
   }
 
   fetchScores() {
+    const supabaseConfig = DesignConfig.supabase;
+    const useSupabase = supabaseConfig && supabaseConfig.url && supabaseConfig.anonKey;
+
+    if (useSupabase) {
+      const url = `${supabaseConfig.url}/rest/v1/scores?select=name,score,avancode,date&order=score.desc,date.asc&limit=100`;
+      fetch(url, {
+        method: 'GET',
+        headers: {
+          'apikey': supabaseConfig.anonKey,
+          'Authorization': `Bearer ${supabaseConfig.anonKey}`
+        }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Supabase status " + res.status);
+        return res.json();
+      })
+      .then(data => {
+        this.scores = data;
+        localStorage.setItem('dino_online_scores_backup', JSON.stringify(data));
+      })
+      .catch(err => {
+        console.warn('Erro ao buscar recordes do Supabase, carregando backup...', err);
+        const onlineBackup = localStorage.getItem('dino_online_scores_backup');
+        if (onlineBackup) {
+          try { this.scores = JSON.parse(onlineBackup); } catch(e) {}
+        } else {
+          this.scores = [];
+        }
+      });
+      return;
+    }
+
     fetch('/scores')
       .then(res => {
         if (!res.ok) throw new Error("HTTP status " + res.status);
