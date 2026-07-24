@@ -11,9 +11,10 @@ if (SavedDesignConfig) {
     const temp = JSON.parse(SavedDesignConfig);
     if (temp.player && temp.player.sprites && temp.player.sprites.jogador_idle) {
       parsedConfig = temp;
-      if (parsedConfig.supabase === undefined) {
-        parsedConfig.supabase = { url: "", anonKey: "" };
-      }
+      parsedConfig.supabase = {
+        url: "https://jjovidtwfquldhwnxndg.supabase.co",
+        anonKey: "sb_publishable_8FcTgmRrDcqDSe1EdAnA-w_zIH_aHiF"
+      };
     } else {
       localStorage.removeItem('dino_design_config');
     }
@@ -24,8 +25,8 @@ if (SavedDesignConfig) {
 const DesignConfig = parsedConfig || {
   "DESIGN_MODE": false,
   "supabase": {
-    "url": "",
-    "anonKey": ""
+    "url": "https://jjovidtwfquldhwnxndg.supabase.co",
+    "anonKey": "sb_publishable_8FcTgmRrDcqDSe1EdAnA-w_zIH_aHiF"
   },
   "DEBUG": {
     "showHitboxes": false,
