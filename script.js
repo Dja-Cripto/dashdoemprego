@@ -2330,7 +2330,12 @@ class Game {
         const useSupabase = supabaseConfig && supabaseConfig.url && supabaseConfig.anonKey;
 
         if (useSupabase) {
-          const url = `${supabaseConfig.url}/rest/v1/scores`;
+          let baseUrl = supabaseConfig.url.trim();
+          if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+          if (baseUrl.endsWith('/rest/v1')) baseUrl = baseUrl.slice(0, -8);
+          if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+
+          const url = `${baseUrl}/rest/v1/scores`;
           fetch(url, {
             method: 'POST',
             headers: {
@@ -3137,7 +3142,12 @@ class Game {
     const useSupabase = supabaseConfig && supabaseConfig.url && supabaseConfig.anonKey;
 
     if (useSupabase) {
-      const url = `${supabaseConfig.url}/rest/v1/scores?select=name,score,avancode,date&order=score.desc,date.asc&limit=100`;
+      let baseUrl = supabaseConfig.url.trim();
+      if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+      if (baseUrl.endsWith('/rest/v1')) baseUrl = baseUrl.slice(0, -8);
+      if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+
+      const url = `${baseUrl}/rest/v1/scores?select=name,score,avancode,date&order=score.desc,date.asc&limit=100`;
       fetch(url, {
         method: 'GET',
         headers: {
