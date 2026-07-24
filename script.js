@@ -2335,7 +2335,10 @@ class Game {
             avancode: avancodeVal
           })
         })
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) throw new Error("Server responded with HTTP " + res.status);
+          return res.json();
+        })
         .then(data => {
           if (data.status === 'ok') {
             this.scores = data.scores;
@@ -2344,12 +2347,39 @@ class Game {
             if (scoreInputAvancode) scoreInputAvancode.value = '';
             this.state = State.SCORE_BOARD;
           } else {
-            alert('Erro: ' + data.message);
+            throw new Error(data.message || 'Erro desconhecido');
           }
         })
         .catch(err => {
-          console.error(err);
-          alert('Erro de conexão ao salvar pontuação.');
+          console.warn('Falha ao salvar score no servidor, salvando localmente...', err);
+          
+          const newEntry = {
+            name: name.substring(0, 15).toUpperCase(),
+            score: this.score.currentScore,
+            avancode: avancodeVal ? avancodeVal.substring(0, 20).toUpperCase() : undefined,
+            date: new Date().toISOString()
+          };
+          
+          let localScores = [];
+          const savedLocal = localStorage.getItem('dino_local_scores');
+          if (savedLocal) {
+            try { localScores = JSON.parse(savedLocal); } catch(e) {}
+          }
+          
+          localScores.push(newEntry);
+          localScores.sort((a, b) => b.score - a.score);
+          localScores = localScores.slice(0, 100);
+          
+          localStorage.setItem('dino_local_scores', JSON.stringify(localScores));
+          
+          this.fetchScores();
+          
+          alert('Recorde salvo localmente com sucesso! (O servidor de banco de dados global está offline).');
+          
+          scoreModal.classList.remove('active');
+          scoreInputName.value = '';
+          if (scoreInputAvancode) scoreInputAvancode.value = '';
+          this.state = State.SCORE_BOARD;
         });
       });
     }
@@ -3067,13 +3097,38 @@ class Game {
 
   fetchScores() {
     fetch('/scores')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("HTTP status " + res.status);
+        return res.json();
+      })
       .then(data => {
         this.scores = data;
+        localStorage.setItem('dino_online_scores_backup', JSON.stringify(data));
       })
       .catch(err => {
-        console.error('Erro ao buscar recordes:', err);
-        this.scores = [];
+        console.warn('Erro ao buscar recordes do servidor, carregando locais...', err);
+        
+        const localScores = localStorage.getItem('dino_local_scores');
+        const onlineBackup = localStorage.getItem('dino_online_scores_backup');
+        
+        let mergedScores = [];
+        if (onlineBackup) {
+          try { mergedScores = JSON.parse(onlineBackup); } catch(e) {}
+        }
+        
+        if (localScores) {
+          try {
+            const parsedLocal = JSON.parse(localScores);
+            parsedLocal.forEach(localItem => {
+              if (!mergedScores.some(onlineItem => onlineItem.name === localItem.name && onlineItem.score === localItem.score && onlineItem.date === localItem.date)) {
+                mergedScores.push(localItem);
+              }
+            });
+          } catch(e) {}
+        }
+        
+        mergedScores.sort((a, b) => b.score - a.score);
+        this.scores = mergedScores.slice(0, 100);
       });
   }
 
